@@ -4,6 +4,12 @@
 #include <time.h>
 #include <unistd.h>
 
+void *thread_func1(void *arg);
+void *thread_func2(void *arg);
+void *thread_func3(void *arg);
+void *thread_func4(void *arg);
+
+
 int ticks = 0;
 int vehicles = 0;
 int *startPoint;
@@ -24,33 +30,51 @@ int main(void){
 	}
 	printf("\n");
 	/***********************************************************/
+	//pthread create
+	pthread_t tid[4];
+	if(pthread_create(&tid[0], NULL, thread_func1, NULL) != 0){
+		fprintf(stderr, "pthread_create error\n");
+		exit(1);
+	}
+	if(pthread_create(&tid[1], NULL, thread_func2, NULL) != 0){
+                fprintf(stderr, "pthread_create error\n");
+                exit(1);
+        }
+	if(pthread_create(&tid[2], NULL, thread_func3, NULL) != 0){
+                fprintf(stderr, "pthread_create error\n");
+                exit(1);
+        }
+	if(pthread_create(&tid[3], NULL, thread_func4, NULL) != 0){
+                fprintf(stderr, "pthread_create error\n");
+                exit(1);
+        }
+	/***********************************************************/
 	//distribute startPoint to threads per 1 second
 	int one=0, two=0, three=0, four=0, i=0;
 	while(1){   //-> until ticks ends
 		sleep(1);
 		if(i<vehicles){
-			switch(startPoint[i]){
-				case 1:
+				if(startPoint[i] == 1){
 					thr1Point[one] = startPoint[i];
-					printf("%d\n", thr1Point[one]);
+					//printf("1 : %d\n", thr1Point[one]);
 					one++;
-					break;
-				case 2:
+				}
+				else if(startPoint[i] == 2){
 					thr2Point[two] = startPoint[i];
-					printf("%d\n", thr2Point[two]);
+					//printf("2 : %d\n", thr2Point[two]);
 					two++;
-                                        break;
-				case 3:
+                                }
+				else if(startPoint[i] == 3){
                                         thr3Point[three] = startPoint[i];
-					printf("%d\n", thr3Point[three]);
+					//printf("3 : %d\n", thr3Point[three]);
 					three++;
-                                        break;
-                                case 4:
+                                }
+				else if(startPoint[i] == 4){
                                         thr4Point[four] = startPoint[i];
-					printf("%d\n", thr4Point[four]);
+					//printf("4 : %d\n", thr4Point[four]);
 					four++;
-                                        break;
-			}
+                                }
+			
 			i++;
 		}
 		else break;
@@ -58,3 +82,50 @@ int main(void){
 
 	return 0;
 }
+
+/***********************************************************/
+void *thread_func1(void *arg){
+	int i = 0;
+	while(1){
+		if(thr1Point[i] != 0){
+			printf("thread 1 : %d\n", thr1Point[i]);
+			i++;
+		}
+		else continue;
+	}
+	return NULL;
+}
+void *thread_func2(void *arg){
+        int i = 0;
+        while(1){
+                if(thr2Point[i] != 0){
+                        printf("thread 2 : %d\n", thr2Point[i]);
+                        i++;
+                }
+		else continue;
+        }
+        return NULL;
+}
+void *thread_func3(void *arg){
+        int i = 0;
+        while(1){
+                if(thr3Point[i] != 0){
+                        printf("thread 3 : %d\n", thr3Point[i]);
+                        i++;
+                }
+		else continue;
+        }
+        return NULL;
+}
+void *thread_func4(void *arg){
+	int i = 0;
+        while(1){
+                if(thr4Point[i] != 0){
+                        printf("thread 4 : %d\n", thr4Point[i]);
+                        i++;
+                }
+		else continue;
+        }
+        return NULL;
+}
+

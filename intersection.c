@@ -23,6 +23,9 @@ void until_finish_active(void);
 void update_time(void);
 int check_passed_car(void);
 void check_no_car(void);
+void print_situ_result(void);
+bool is_work_all_finished(void);
+void print_result(void);
 
 struct stat {
 	int dir;
@@ -87,31 +90,33 @@ int main(void){
 
 	/***********************************************************/
 	//distribute startPoint to threads per 1 second
-	int one=0, two=0, three=0, four=0, i=0;
+	int one=0, two=0, three=0, four=0, tick = 0;
 	while(1){   //-> until ticks ends
 		sleep(1);
-		printf("=============ticks : %d===============\n", i);
+		//printf("===============================\n");
+		printf("tick %d\n", tick);
+		printf("===============================\n");
 		//pthread_cond_broadcast(&cond);
 
-		if(i<vehicles){
-				if(startPoint[i] == 1){
-					p_startPoint[0][one] = startPoint[i];
+		if(tick<vehicles){
+				if(startPoint[tick] == 1){
+					p_startPoint[0][one] = startPoint[tick];
 					one++;
 				}
-				else if(startPoint[i] == 2){
-					p_startPoint[1][two] = startPoint[i];
+				else if(startPoint[tick] == 2){
+					p_startPoint[1][two] = startPoint[tick];
 					two++;
                                 }
-				else if(startPoint[i] == 3){
-                                        p_startPoint[2][three] = startPoint[i];
+				else if(startPoint[tick] == 3){
+                                        p_startPoint[2][three] = startPoint[tick];
 					three++;
                                 }
-				else if(startPoint[i] == 4){
-                                        p_startPoint[3][four] = startPoint[i];
+				else if(startPoint[tick] == 4){
+                                        p_startPoint[3][four] = startPoint[tick];
 					four++;
                                 }
 			
-			i++;
+			tick++;
 		}
 		else break;
 		pthread_cond_broadcast(&cond);
@@ -120,8 +125,16 @@ int main(void){
 		if((passed_car = check_passed_car())!=0){
 			printf("passed car : %d\n", passed_car);
 		}
+		print_situ_result();
+		printf("===============================\n");
 		check_no_car();
+
+		if(is_work_all_finished() == true){
+			print_situ_result();
+			break;
+		}
 	}
+	print_result();
 
 	return 0;
 }
@@ -133,11 +146,11 @@ void *thread_func(void *arg){
 	while(1){
 		pthread_mutex_unlock(&mutex);
 		pthread_cond_wait(&cond, &mutex);
-		printf("%d -> ", startWay);
-		for(int i = 0;i<15;i++){
-			printf("%d ", p_startPoint[startWay-1][i]);
-		}
-		printf("\n");
+		//printf("%d -> ", startWay);
+		//for(int i = 0;i<15;i++){
+		//	printf("%d ", p_startPoint[startWay-1][i]);
+		//}
+		//printf("\n");
 
 		if(!is_empty_way(p_startPoint[startWay-1]) && !is_vertical(startWay))
 		{
@@ -147,8 +160,11 @@ void *thread_func(void *arg){
 				printf("EMPTY\n");
 				running_car.deg = startWay % 2;
 				running_car.stat[0].dir = startWay;
+				//대기큐 랜덤 뽑기해서 넣기
 				running_car.stat[0].way = p_startPoint[startWay-1][way_waiting];
+				//랜덤뽑기한 후 대기큐에 대한 셋팅
 				running_car.stat[0].time = 0;
+				//이건 아마 없애도 될 듯
 				p_startPoint[startWay-1][way_waiting] = 0;
 				way_waiting++;
 			}
@@ -159,23 +175,32 @@ void *thread_func(void *arg){
 			  {
 				printf("start way : %d\n", startWay);
 				if(running_car.stat[0].way==0){
+					//
 					running_car.stat[0].way = p_startPoint[startWay-1][way_waiting];
+					//
 					running_car.stat[0].dir = startWay;
 					running_car.stat[0].time = 0;
+					//
 					p_startPoint[startWay-1][way_waiting] = 0;
 				}
 				else if(running_car.stat[1].way==0){
+					//
                                         running_car.stat[1].way = p_startPoint[startWay-1][way_waiting];
+					//
                                         running_car.stat[1].dir = startWay;
                                         running_car.stat[1].time = 0;
+					//
 					p_startPoint[startWay-1][way_waiting] = 0;
                                 }
 				way_waiting++;
 			  }
+			  else{ //마주보는 방향이지만 이미 출발한 차 존재
+			  }
 			}
 		}
 		else{//lock을 얻을 조건이 안될 때
-
+			//각 방향 대기큐에 차 넣어주고 전체 대기큐에도 넣어줌.
+			//각 방향 대기큐 숫자 늘리기
 		}
 		//way_waiting++;
 		finish_active[startWay-1] = true;
@@ -249,4 +274,13 @@ int check_passed_car(void){
 void check_no_car(void){
 	if((running_car.stat[0].dir == 0) && (running_car.stat[1].dir == 0))
 		running_car.deg = NO_CAR;
+}
+void print_situ_result(void){
+	//각 tick마다 출력될 결과들 여기서 출력
+}
+bool is_work_all_finished(void){
+	//모든 일이 끝났는지 확인. 도로가 비어있고 대기큐에 아무것도 없는지
+}
+void print_result(void){
+	//제일 마지막 결과 출력해주는 함수
 }

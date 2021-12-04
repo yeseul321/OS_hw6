@@ -171,9 +171,9 @@ void *thread_func(void *arg){
 			{
 				running_car.deg = startWay % 2;
 				running_car.stat[0].dir = startWay;
+				running_car.stat[0].way = startWay;
 				//대기큐 랜덤 뽑기해서 넣기
 				random = rand()%(waiting_length-1)+1;
-				running_car.stat[0].way = startWay;
 				//랜덤뽑기한 후 대기큐에 대한 셋팅
 				index = setWaylist(way_head[startWay-1],random);
 				all_waiting_list[index] = 0;
@@ -212,10 +212,12 @@ void *thread_func(void *arg){
 				way_waiting++;
 			  }
 			  else{ //마주보는 방향이지만 이미 출발한 차 존재
+				  //DO NOTHING
 			  }
 			}
 		}
 		else{//lock을 얻을 조건이 안될 때
+			//DO NOTHING
 		}
 
 		finish_active[startWay-1] = true;
@@ -224,25 +226,25 @@ void *thread_func(void *arg){
 	return NULL;
 }
 
-bool is_empty_way(struct waiting *way_waiting){
+bool is_empty_way(struct waiting *way_waiting){ //각 쓰레드의 waiting list가 비어있는지 검사
 	if(way_waiting->next == NULL){
 		return true;
 	}
 	else return false;
 }
-bool is_vertical(int start){
+bool is_vertical(int start){ //현재 선택된 차량이 도로 위의 차량과 수직위치인지 검사
 	if(running_car.deg == (start % 2)) return false; //Same Degree
 	else if(running_car.deg == NO_CAR) return false; //No Car On The Road
 	else return true;
 }
-bool is_same_dir(int startWay){
+bool is_same_dir(int startWay){ //현재 선택된 차량이 도로 위의 차량과 완전 같은 방향인지 검사
 	for(int i = 0 ;i<2;i++){
 		if(running_car.stat[i].dir == startWay) return true;
 	}
 	return false;
 }
 
-void until_finish_active(void){
+void until_finish_active(void){ //각 쓰레드가 모두 일을 끝내고 다시 대기상태로 돌아갈 때 까지 기다리는 함수
 	bool finished;
 	while(1){
 		finished = true;
@@ -258,7 +260,7 @@ void until_finish_active(void){
 	}
 }
 
-void update_time(void){
+void update_time(void){ //운행중인 차량의 운행 시간을 늘려주는 함수
 	for(int i = 0;i < 2;i++){
 		if(running_car.stat[i].way != 0){
 			running_car.stat[i].time++;
@@ -267,7 +269,7 @@ void update_time(void){
 	return;
 }
 
-int check_passed_car(void){
+int check_passed_car(void){ //차량이 도로를 완전히 통과했는지 확인하고 그 차량의 번호를 리턴하는 함수
 	int pass_car = 0;
 	for(int i = 0; i<2;i++){
 		if(running_car.stat[i].time == 2){
@@ -281,11 +283,11 @@ int check_passed_car(void){
 	}
 	return 0;
 }
-void check_no_car(void){
+void check_no_car(void){ //도로위에 운행중인 차량이 전혀 없는지 확인하는 함수
 	if((running_car.stat[0].dir == 0) && (running_car.stat[1].dir == 0))
 		running_car.deg = NO_CAR;
 }
-void print_situ_result(void){
+void print_situ_result(void){ //각 tick마다 현 상황을 출력하는 함수
 	int pass = 0;
 	
 	printf("Passed Vehicle\n");
@@ -303,7 +305,7 @@ void print_situ_result(void){
 	}
 	printf("\n===============================\n");
 }
-bool is_work_all_finished(void){
+bool is_work_all_finished(void){ //모든 작업이 끝났는 지 검사하는 함수
 	bool ret = true;
 	for(int i = 0; i<16; i++){
 		if(all_waiting_list[i] != 0)
@@ -314,21 +316,21 @@ bool is_work_all_finished(void){
 
 	return ret;
 }
-void print_result(int tick){
+void print_result(int tick){ //모든 작업이 끝난 후 전체 결과를 출력하는 함수
 	printf("Number of vehicles passed from each start point\n");
 	for(int i = 0;i < 4; i++){
 		printf("P%d : %d times\n", i+1, each_passed[i]);
 	}
 	printf("Total time : %d ticks\n", tick);
 }
-void way_addData(struct waiting *waiting, int data, int index){
+void way_addData(struct waiting *waiting, int data, int index){ //각 way에 대한 쓰레드의 waiting list에 값을 추가하는 함수
 	struct waiting *newNode = malloc(sizeof(struct waiting));
 	newNode->next = waiting->next;
 	newNode->data = data;
 	newNode->index = index;
 	waiting->next = newNode;
 }
-int check_waiting_length(struct waiting *head){
+int check_waiting_length(struct waiting *head){ //각 쓰레드의 waiting list의 길이를 구하는 함수
 	int count = 0;
 	struct waiting *this = malloc(sizeof(struct waiting));
 	this = head;
@@ -338,7 +340,7 @@ int check_waiting_length(struct waiting *head){
 	}
 	return count;
 }
-int setWaylist(struct waiting *head,int random){
+int setWaylist(struct waiting *head,int random){ //각 쓰레드의 차량이 운행에 들어간다면 waiting list를 재정비 해주는 함수
 	struct waiting *cur_node = malloc(sizeof(struct waiting));
 	struct waiting *pre_node = malloc(sizeof(struct waiting));
 	int i = 1;

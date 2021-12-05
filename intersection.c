@@ -142,6 +142,21 @@ int main(void){
 	}
 	print_result(++tick);
 
+	for (int i =4; i > 0; i--){
+        	if (pthread_cancel(tid[i]) != 0)
+        	{
+            	fprintf(stderr, "pthread_cancel() error\n");
+            	return -1;
+        	}
+	}
+	pthread_mutex_destroy(&mutex);
+	pthread_cond_destroy(&cond);
+
+	free(each_passed);
+	for(int i = 0;i<4;i++) free(way_head[i]);
+	free(all_waiting_list);
+	free(startPoint);
+
 	return 0;
 }
 

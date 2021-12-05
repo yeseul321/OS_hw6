@@ -351,7 +351,7 @@ int setWaylist(struct waiting *head,int random){ //각 쓰레드의 차량이 �
 			i++;
 			pre_node = cur_node;
 			if(cur_node->next == NULL){
-				ret = pre_node->index;
+				ret = cur_node->index;
 				pre_node->next = NULL;
 				break;
 			}

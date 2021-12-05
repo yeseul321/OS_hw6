@@ -14,20 +14,20 @@
 #define EAST 4
 
 struct stat {
-        int dir;
-        int time;
+        int dir; //차가 출발한 방향
+        int time; //차가 출발한 시점으로부터 지난 시간
         int way;
 };
 
 typedef struct car{
-        int deg;
-        struct stat stat[2];
+        int deg; //현재 차가 움직이는 각도 -> 가로 또는 세로
+        struct stat stat[2]; //도로 점유 가능 차량 최대 2대
 } car;
 
-typedef struct waiting{
-        int data;
-        int index;
-        struct waiting *next;
+typedef struct waiting{   //각 도로쓰레드의 대기큐
+        int data; //출발 방향 값
+        int index; //전체 대기큐의 배열 속 위치
+        struct waiting *next; //자기참조구조체(링크드리스트 구현)
 } waiting_way;
 
 void *thread_func(void *arg);
@@ -50,10 +50,8 @@ int check_passed_car(void);
 
 int vehicles = 0;
 int *startPoint;
-int way_passed[4] = {0,};
 int passed_car = 0;
 int *all_waiting_list;
-int *p_startPoint[4];
 int *each_passed;
 bool finish_active[4] = {false, false, false, false};
 
@@ -84,10 +82,6 @@ int main(void){
 		printf("%d ", startPoint[i]);
 	}
 
-	for(int i = 0;i < 4;i++){
-                p_startPoint[i] = (int *)calloc(15, sizeof(int));
-        }
-
 	printf("\n");
 	/***********************************************************/
 	//pthread create
@@ -109,7 +103,7 @@ int main(void){
 		printf("tick : %d\n", tick+1);
 		printf("===============================\n");
 
-		if(tick<vehicles){
+		if(tick<vehicles){ //들어온 수 1초마다 각 쓰레드 waiting 큐로 분류해서 보내기
 				if(startPoint[tick] == 1){
 					way_addData(way_head[0],1,tick);
 					all_waiting_list[tick] = 1;
@@ -172,44 +166,38 @@ void *thread_func(void *arg){
 				running_car.deg = startWay % 2;
 				running_car.stat[0].dir = startWay;
 				running_car.stat[0].way = startWay;
-				//대기큐 랜덤 뽑기해서 넣기
+				running_car.stat[0].time = 0;
+				//각 way에 대한 대기큐 랜덤 뽑기
 				random = rand()%(waiting_length-1)+1;
 				//랜덤뽑기한 후 대기큐에 대한 셋팅
 				index = setWaylist(way_head[startWay-1],random);
 				all_waiting_list[index] = 0;
-				running_car.stat[0].time = 0;
-
-				way_waiting++;
 			}
-			//FACE-TO-FACE CAR
+			//FACE-TO-FACE CAR 마주보는 방향
 			else if((running_car.deg == startWay % 2) && (!is_same_dir(startWay)))
 			{
-			  if((running_car.stat[0].dir!=0&&running_car.stat[0].time!=0) || (running_car.stat[1].dir!=0&&running_car.stat[1].time!=0))
+			  if((running_car.stat[0].dir!=0&&running_car.stat[0].time!=0) || (running_car.stat[1].dir!=0&&running_car.stat[1].time!=0)) //현재 시점 출발한 차량 없을 때
 			  {
 				if(running_car.stat[0].way==0){
-					//랜덤
+					running_car.stat[0].way = startWay;
+					running_car.stat[0].dir = startWay;
+					running_car.stat[0].time = 0;
+					//각 way에 대한 대기큐 랜덤 뽑기
 					random = rand()%(waiting_length-1)+1;
-                                	running_car.stat[0].way = startWay;
-
 					//랜덤뽑기한 후 대기큐에 대한 셋팅
                                 	index = setWaylist(way_head[startWay-1],random);
 					all_waiting_list[index] = 0;
-					running_car.stat[0].dir = startWay;
-					running_car.stat[0].time = 0;
 				}
 				else if(running_car.stat[1].way==0){
-					//랜덤
+					running_car.stat[1].way = startWay;
+					running_car.stat[1].dir = startWay;
+					running_car.stat[1].time = 0;
+					//각 way에 대한 대기큐 랜덤 뽑기
                                         random = rand()%(waiting_length-1)+1;
-                                        running_car.stat[1].way = startWay;
-                                        
 					//랜덤뽑기한 후 대기큐에 대한 셋팅
                                         index = setWaylist(way_head[startWay-1],random);
 					all_waiting_list[index] = 0;
-                                        running_car.stat[1].dir = startWay;
-                                        running_car.stat[1].time = 0;
-					
                                 }
-				way_waiting++;
 			  }
 			  else{ //마주보는 방향이지만 이미 출발한 차 존재
 				  //DO NOTHING
